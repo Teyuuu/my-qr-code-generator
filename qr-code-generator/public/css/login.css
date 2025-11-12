@@ -1,0 +1,187 @@
+/* login.css - Place in public/css/login.css */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.login-container {
+    width: 100%;
+    max-width: 480px;
+}
+
+.login-card {
+    background: white;
+    border-radius: 20px;
+    padding: 48px 40px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: slideUp 0.5s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.qr-icon {
+    width: 80px;
+    height: 80px;
+    background: #0A3A6B;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px;
+}
+
+.system-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1a1a1a;
+    text-align: center;
+    margin-bottom: 8px;
+}
+
+.subtitle {
+    font-size: 15px;
+    color: #666;
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.form-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.form-control {
+    padding: 12px 16px;
+    font-size: 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    border-color: #0A3A6B;
+    box-shadow: 0 0 0 3px rgba(10, 58, 107, 0.1);
+}
+
+.form-control.is-invalid {
+    border-color: #dc3545;
+}
+
+.invalid-feedback {
+    display: block;
+    font-size: 13px;
+    color: #dc3545;
+    margin-top: 4px;
+}
+
+.forgot-password {
+    color: #0A3A6B;
+    font-size: 14px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.forgot-password:hover {
+    color: #062545;
+    text-decoration: underline;
+}
+
+.btn-signin {
+    background: #0A3A6B;
+    color: white;
+    border: none;
+    padding: 14px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.btn-signin:hover {
+    background: #062545;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(10, 58, 107, 0.3);
+}
+
+.btn-signin:active {
+    transform: translateY(0);
+}
+
+.btn-signin:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.demo-credentials {
+    margin-top: 32px;
+    padding: 20px;
+    background: #FFF8E1;
+    border-radius: 12px;
+    border-left: 4px solid #FDB813;
+}
+
+.demo-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 12px;
+}
+
+.demo-item {
+    font-size: 13px;
+    color: #555;
+    margin-bottom: 6px;
+    font-family: 'Courier New', monospace;
+}
+
+.demo-item:last-child {
+    margin-bottom: 0;
+}
+
+/* Loading State */
+.btn-signin .spinner-border {
+    width: 18px;
+    height: 18px;
+    border-width: 2px;
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+    .login-card {
+        padding: 36px 24px;
+    }
+
+    .system-title {
+        font-size: 20px;
+    }
+
+    .subtitle {
+        font-size: 14px;
+    }
+}

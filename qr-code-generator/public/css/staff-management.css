@@ -1,0 +1,223 @@
+/* staff-management.css - Place in public/css/staff-management.css */
+
+/* Staff Table Specific Styles */
+.staff-table {
+    margin: 0;
+}
+
+.staff-table thead {
+    background: #f8f9fa;
+}
+
+.staff-table th {
+    padding: 16px 20px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.staff-table td {
+    padding: 20px;
+    font-size: 14px;
+    color: #333;
+    vertical-align: middle;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.staff-table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+/* User Cell with Avatar */
+.user-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.user-avatar-cell {
+    width: 40px;
+    height: 40px;
+    background: #0A3A6B;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.user-info-cell {
+    display: flex;
+    flex-direction: column;
+}
+
+.user-name-cell {
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 2px;
+}
+
+.user-label {
+    font-size: 12px;
+    color: #666;
+    font-weight: 500;
+}
+
+/* Role Badge */
+.role-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.role-badge.admin {
+    background: #0A3A6B;
+    color: white;
+}
+
+.role-badge.staff {
+    background: #0EA5E9;
+    color: white;
+}
+
+.role-badge i {
+    font-size: 14px;
+}
+
+/* Department Badge */
+.department-badge {
+    color: #666;
+    font-size: 14px;
+}
+
+.department-badge.empty {
+    color: #ccc;
+}
+
+/* Action Buttons */
+.action-btn {
+    border: none;
+    background: transparent;
+    padding: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-radius: 6px;
+}
+
+.action-btn:hover {
+    background: #f0f0f0;
+}
+
+.action-btn.delete:hover {
+    background: #fee;
+    color: #dc3545;
+}
+
+.action-btn i {
+    font-size: 18px;
+}
+
+/* Table Footer */
+.table-footer {
+    padding: 16px 20px;
+    background: white;
+    border-radius: 0 0 12px 12px;
+    border-top: 1px solid #e9ecef;
+}
+
+.showing-text {
+    margin: 0;
+    color: #666;
+    font-size: 14px;
+}
+
+/* Modal Customization */
+#departmentField {
+    transition: all 0.3s ease;
+}
+
+#departmentField.d-none {
+    display: none !important;
+}
+
+#passwordHint {
+    display: none;
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+#passwordHint.show {
+    display: block;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+}
+
+.empty-message {
+    padding: 60px 20px;
+    color: #999;
+    font-size: 16px;
+}
+
+/* Responsive */
+@media (max-width: 991px) {
+    .staff-table th,
+    .staff-table td {
+        padding: 12px;
+        font-size: 13px;
+    }
+
+    .user-avatar-cell {
+        width: 36px;
+        height: 36px;
+        font-size: 13px;
+    }
+
+    .role-badge {
+        font-size: 12px;
+        padding: 4px 10px;
+    }
+}
+
+@media (max-width: 768px) {
+    /* Stack table for mobile */
+    .staff-table thead {
+        display: none;
+    }
+
+    .staff-table tbody tr {
+        display: block;
+        margin-bottom: 16px;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 16px;
+    }
+
+    .staff-table td {
+        display: block;
+        text-align: left;
+        padding: 8px 0;
+        border: none;
+    }
+
+    .staff-table td:before {
+        content: attr(data-label);
+        font-weight: 600;
+        display: block;
+        margin-bottom: 4px;
+        color: #666;
+        font-size: 12px;
+    }
+}

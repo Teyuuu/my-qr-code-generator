@@ -1,0 +1,160 @@
+/* departments.css - Department tab styles based on staff-management.css */
+
+/* Department Table Specific Styles */
+.department-table {
+    margin: 0;
+}
+
+.department-table thead {
+    background: #f8f9fa;
+}
+
+.department-table th {
+    padding: 16px 20px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.department-table td {
+    padding: 20px;
+    font-size: 14px;
+    color: #333;
+    vertical-align: middle;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.department-table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+/* Department Name Cell */
+.department-name-cell {
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+.department-head-cell {
+    font-size: 14px;
+    color: #666;
+}
+
+/* Staff Count Badge */
+.staff-count-badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 20px;
+    background: #0EA5E9;
+    color: white;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+/* Action Buttons */
+.action-btn {
+    border: none;
+    background: transparent;
+    padding: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-radius: 6px;
+}
+
+.action-btn:hover {
+    background: #f0f0f0;
+}
+
+.action-btn.delete:hover {
+    background: #fee;
+    color: #dc3545;
+}
+
+.action-btn i {
+    font-size: 18px;
+}
+
+/* Table Footer */
+.table-footer {
+    padding: 16px 20px;
+    background: white;
+    border-radius: 0 0 12px 12px;
+    border-top: 1px solid #e9ecef;
+}
+
+.showing-text {
+    margin: 0;
+    color: #666;
+    font-size: 14px;
+}
+
+/* Modal Customization */
+#departmentModal .modal-header {
+    background-color: #f8f9fa;
+}
+
+#departmentModal .modal-title {
+    font-weight: 600;
+}
+
+#departmentModal .form-label {
+    font-weight: 500;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+}
+
+.empty-message {
+    padding: 60px 20px;
+    color: #999;
+    font-size: 16px;
+}
+
+/* Responsive */
+@media (max-width: 991px) {
+    .department-table th,
+    .department-table td {
+        padding: 12px;
+        font-size: 13px;
+    }
+
+    .staff-count-badge {
+        font-size: 12px;
+        padding: 4px 10px;
+    }
+}
+
+@media (max-width: 768px) {
+    /* Stack table for mobile */
+    .department-table thead {
+        display: none;
+    }
+
+    .department-table tbody tr {
+        display: block;
+        margin-bottom: 16px;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 16px;
+    }
+
+    .department-table td {
+        display: block;
+        text-align: left;
+        padding: 8px 0;
+        border: none;
+    }
+
+    .department-table td:before {
+        content: attr(data-label);
+        font-weight: 600;
+        display: block;
+        margin-bottom: 4px;
+        color: #666;
+        font-size: 12px;
+    }
+}
