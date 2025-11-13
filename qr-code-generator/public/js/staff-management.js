@@ -1,8 +1,11 @@
-// staff-management.js - SweetAlert2 version
+// staff-management.js - Place in public/js/staff-management.js
 
 $(document).ready(function() {
     let editMode = false;
     let currentStaffId = null;
+
+    // Load staff on page load
+    loadStaff();
 
     // Search functionality
     let searchTimeout;
@@ -50,6 +53,7 @@ $(document).ready(function() {
     // Function to load staff
     function loadStaff(search = '') {
         showLoading();
+
         $.ajax({
             url: '/api/staff',
             method: 'GET',
@@ -84,7 +88,7 @@ $(document).ready(function() {
 
         staff.forEach(function(user) {
             const initials = getInitials(user.name);
-            const isCurrentUser = user.email === 'admin@company.com';
+            const isCurrentUser = user.email === 'admin@company.com'; // You can pass this from backend
             const roleClass = user.role === 'admin' ? 'admin' : 'staff';
             const roleIcon = user.role === 'admin' ? 'bi-shield-check' : 'bi-person';
             const department = user.department || '—';
@@ -123,6 +127,7 @@ $(document).ready(function() {
             $tbody.append(row);
         });
 
+        // Attach event handlers
         attachActionHandlers();
     }
 
@@ -141,6 +146,7 @@ $(document).ready(function() {
             showError('Please fill in all required fields');
             return;
         }
+
         if (formData.role === 'staff' && !formData.department) {
             showError('Please select a department for staff members');
             return;
@@ -161,16 +167,11 @@ $(document).ready(function() {
             error: function(xhr) {
                 if (xhr.status === 422) {
                     const errors = xhr.responseJSON.errors;
-                    let errorHtml = '<ul style="text-align:left;">';
+                    let errorMsg = '';
                     for (let field in errors) {
-                        errorHtml += `<li>${errors[field][0]}</li>`;
+                        errorMsg += '- ' + errors[field][0] + '<br>';
                     }
-                    errorHtml += '</ul>';
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Validation Error',
-                        html: errorHtml
-                    });
+                    showError(errorMsg, 'Validation Error');
                 } else {
                     showError('Failed to create user. Please try again.');
                 }
@@ -189,8 +190,11 @@ $(document).ready(function() {
             role: $('#staffRole').val(),
             department: $('#staffRole').val() === 'admin' ? null : $('#staffDepartment').val()
         };
+
         const password = $('#staffPassword').val();
-        if (password) formData.password = password;
+        if (password) {
+            formData.password = password;
+        }
 
         const $btn = $('#saveStaffBtn');
         $btn.prop('disabled', true).text('Updating...');
@@ -207,16 +211,11 @@ $(document).ready(function() {
             error: function(xhr) {
                 if (xhr.status === 422) {
                     const errors = xhr.responseJSON.errors;
-                    let errorHtml = '<ul style="text-align:left;">';
+                    let errorMsg = '';
                     for (let field in errors) {
-                        errorHtml += `<li>${errors[field][0]}</li>`;
+                        errorMsg += '- ' + errors[field][0] + '<br>';
                     }
-                    errorHtml += '</ul>';
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Validation Error',
-                        html: errorHtml
-                    });
+                    showError(errorMsg, 'Validation Error');
                 } else {
                     showError('Failed to update user. Please try again.');
                 }
@@ -238,12 +237,11 @@ $(document).ready(function() {
             const id = $(this).data('id');
             Swal.fire({
                 title: 'Are you sure?',
-                text: "This will permanently delete the user.",
+                text: "This action cannot be undone!",
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#dc3545',
-                cancelButtonColor: '#6c757d',
-                confirmButtonText: 'Yes, delete it!'
+                confirmButtonText: 'Yes, delete it!',
+                cancelButtonText: 'Cancel'
             }).then((result) => {
                 if (result.isConfirmed) {
                     deleteStaff(id);
@@ -283,6 +281,14 @@ $(document).ready(function() {
 
     // Delete staff
     function deleteStaff(id) {
+        Swal.fire({
+            title: 'Deleting...',
+            text: 'Please wait',
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            didOpen: () => Swal.showLoading()
+        });
+
         $.ajax({
             url: '/api/staff/' + id,
             method: 'DELETE',
@@ -290,8 +296,12 @@ $(document).ready(function() {
                 loadStaff();
                 showSuccess('User deleted successfully!');
             },
-            error: function() {
-                showError('Failed to delete user. Please try again.');
+            error: function(xhr) {
+                if (xhr.status === 403) {
+                    showError('You cannot delete your own account!');
+                } else {
+                    showError('Failed to delete user. Please try again.');
+                }
             }
         });
     }
@@ -312,7 +322,9 @@ $(document).ready(function() {
     // Utility functions
     function getInitials(name) {
         const parts = name.split(' ');
-        if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+        if (parts.length >= 2) {
+            return (parts[0][0] + parts[1][0]).toUpperCase();
+        }
         return name.substring(0, 2).toUpperCase();
     }
 
@@ -332,17 +344,18 @@ $(document).ready(function() {
         Swal.fire({
             icon: 'success',
             title: 'Success',
-            text: message,
+            html: message,
             timer: 2000,
+            timerProgressBar: true,
             showConfirmButton: false
         });
     }
 
-    function showError(message) {
+    function showError(message, title = 'Error') {
         Swal.fire({
             icon: 'error',
-            title: 'Error',
-            text: message
+            title: title,
+            html: message
         });
     }
 });

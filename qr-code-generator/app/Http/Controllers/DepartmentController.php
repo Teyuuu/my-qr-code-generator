@@ -2,81 +2,139 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Department;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
-class DepartmentController extends Controller
+class DepartmentsController extends Controller
 {
-    // Show Departments page
-    public function index()
+    /**
+     * Display all departments
+     */
+    public function index(Request $request)
     {
-        return view('departments.index'); // resources/views/departments/index.blade.php
-    }
+        $query = Department::withCount('users');
 
-    // API: List departments
-    public function list(Request $request)
-    {
-        $query = Department::query();
-
+        // Search functionality
         if ($request->has('search') && $request->search != '') {
             $search = $request->search;
-            $query->where('name', 'like', "%$search%")
-                  ->orWhere('head', 'like', "%$search%");
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('head', 'like', "%{$search}%");
+            });
         }
 
-        $departments = $query->get()->map(function($dept){
+        $departments = $query->orderBy('name')->get();
+
+        // Format the data
+        $data = $departments->map(function($dept) {
             return [
                 'id' => $dept->id,
                 'name' => $dept->name,
                 'head' => $dept->head,
-                'staff_count' => $dept->users()->count() // assuming relation
+                'staff_count' => $dept->users_count,
             ];
         });
 
-        return response()->json(['data' => $departments]);
+        return response()->json([
+            'success' => true,
+            'data' => $data
+        ]);
     }
 
-    // API: Show single department
-    public function show($id)
-    {
-        $dept = Department::findOrFail($id);
-        return response()->json($dept);
-    }
-
-    // API: Create department
+    /**
+     * Store a new department
+     */
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255|unique:departments,name',
             'head' => 'nullable|string|max:255',
         ]);
 
-        $dept = Department::create($request->only('name','head'));
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
 
-        return response()->json($dept);
+        $department = Department::create([
+            'name' => $request->name,
+            'head' => $request->head,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Department created successfully',
+            'data' => $department
+        ], 201);
     }
 
-    // API: Update department
+    /**
+     * Display the specified department
+     */
+    public function show($id)
+    {
+        $department = Department::findOrFail($id);
+
+        return response()->json([
+            'success' => true,
+            'data' => $department
+        ]);
+    }
+
+    /**
+     * Update the specified department
+     */
     public function update(Request $request, $id)
     {
-        $dept = Department::findOrFail($id);
+        $department = Department::findOrFail($id);
 
-        $request->validate([
-            'name' => 'required|string|max:255',
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255|unique:departments,name,' . $id,
             'head' => 'nullable|string|max:255',
         ]);
 
-        $dept->update($request->only('name','head'));
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
 
-        return response()->json($dept);
+        $department->update([
+            'name' => $request->name,
+            'head' => $request->head,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Department updated successfully',
+            'data' => $department
+        ]);
     }
 
-    // API: Delete department
+    /**
+     * Remove the specified department
+     */
     public function destroy($id)
     {
-        $dept = Department::findOrFail($id);
-        $dept->delete();
+        $department = Department::findOrFail($id);
 
-        return response()->json(['message' => 'Deleted']);
+        // Check if department has staff members
+        if ($department->users()->count() > 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cannot delete department with assigned staff members'
+            ], 403);
+        }
+
+        $department->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Department deleted successfully'
+        ]);
     }
 }

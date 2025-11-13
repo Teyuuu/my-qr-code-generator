@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\QRCodeController;
+use App\Http\Controllers\StaffController;
 
 /*
 |--------------------------------------------------------------------------
@@ -22,6 +23,16 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+    // Staff Management Page
+    Route::get('/staff-management', function () {
+        return view('dashboard.staff-management');
+    })->name('staff.management');
+
+    // Departments Page
+    Route::get('/departments', function () {
+        return view('dashboard.departments');
+    })->name('departments');
+
     // API routes for QR codes
     Route::prefix('api')->group(function () {
         Route::get('/qr-codes', [QRCodeController::class, 'index']);
@@ -29,6 +40,20 @@ Route::middleware('auth')->group(function () {
         Route::get('/qr-codes/{id}', [QRCodeController::class, 'show']);
         Route::put('/qr-codes/{id}', [QRCodeController::class, 'update']);
         Route::delete('/qr-codes/{id}', [QRCodeController::class, 'destroy']);
+
+        // Staff Management API Routes
+        Route::get('/staff', [StaffController::class, 'getStaff']);
+        Route::post('/staff', [StaffController::class, 'store']);
+        Route::get('/staff/{id}', [StaffController::class, 'show']);
+        Route::put('/staff/{id}', [StaffController::class, 'update']);
+        Route::delete('/staff/{id}', [StaffController::class, 'destroy']);
+
+        // Staff Management API
+        Route::get('/staff', [App\Http\Controllers\StaffController::class, 'getStaff']);
+        Route::post('/staff', [App\Http\Controllers\StaffController::class, 'store']);
+        Route::get('/staff/{id}', [App\Http\Controllers\StaffController::class, 'show']);
+        Route::put('/staff/{id}', [App\Http\Controllers\StaffController::class, 'update']);
+        Route::delete('/staff/{id}', [App\Http\Controllers\StaffController::class, 'destroy']);
     });
 });
 
@@ -36,11 +61,3 @@ Route::middleware('auth')->group(function () {
 Route::get('/', function () {
     return auth()->check() ? redirect('/dashboard') : redirect('/login');
 });
-
-Route::get('/staff-management', function () {
-    return view('dashboard.staff-management');
-})->name('staff.management');
-
-Route::get('/departments', function () {
-    return view('dashboard.departments');
-})->name('departments');

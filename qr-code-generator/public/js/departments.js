@@ -14,6 +14,49 @@ $(document).ready(function() {
         }
     });
 
+    // Profile button
+    $('#profileBtn').on('click', function(e) {
+        e.preventDefault();
+        Swal.fire({
+            icon: 'info',
+            title: 'Profile',
+            text: 'Profile page coming soon!',
+            confirmButtonColor: '#0A3A6B'
+        });
+    });
+
+    // Logout button
+    $('#logoutBtn').on('click', function(e) {
+        e.preventDefault();
+
+        Swal.fire({
+            title: 'Logout',
+            text: 'Are you sure you want to logout?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#0A3A6B',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, logout',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: '/logout',
+                    method: 'POST',
+                    success: function() {
+                        window.location.href = '/login';
+                    },
+                    error: function() {
+                        showError('Logout failed. Please try again.');
+                    }
+                });
+            }
+        });
+    });
+
+    // Load departments on page load
+    loadDepartments();
+
     // Open Create Department modal
     $('#createDepartmentBtn').on('click', function() {
         $('#departmentForm')[0].reset();
@@ -22,56 +65,59 @@ $(document).ready(function() {
         $('#departmentModal').modal('show');
     });
 
-// Save Department
-$('#saveDepartmentBtn').on('click', function() {
-    const data = {
-        id: $('#departmentId').val(),
-        name: $('#departmentName').val(),
-        head: $('#departmentHead').val()
-    };
+    // Save Department
+    $('#saveDepartmentBtn').on('click', function() {
+        const data = {
+            id: $('#departmentId').val(),
+            name: $('#departmentName').val(),
+            head: $('#departmentHead').val()
+        };
 
-    const url = data.id ? `/api/departments/${data.id}` : '/api/departments';
-    const method = data.id ? 'PUT' : 'POST';
-
-    $.ajax({
-        url: url,
-        method: method,
-        data: data,
-        success: function() {
-            $('#departmentModal').modal('hide');
-            loadDepartments();
-            Swal.fire({
-                icon: 'success',
-                title: 'Success',
-                text: 'Department saved successfully!',
-                timer: 2000,
-                showConfirmButton: false
-            });
-        },
-        error: function(xhr) {
-            if (xhr.status === 422) {
-                const errors = xhr.responseJSON.errors;
-                let errorHtml = '<ul style="text-align:left;">';
-                for (let field in errors) {
-                    errorHtml += `<li>${errors[field][0]}</li>`;
-                }
-                errorHtml += '</ul>';
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Validation Error',
-                    html: errorHtml
-                });
-            } else {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Failed to save department. Try again.'
-                });
-            }
+        // Validation
+        if (!data.name || !data.name.trim()) {
+            showError('Please enter a department name');
+            return;
         }
-    });
-});
 
+        const url = data.id ? `/api/departments/${data.id}` : '/api/departments';
+        const method = data.id ? 'PUT' : 'POST';
+        const $btn = $('#saveDepartmentBtn');
+        const btnText = data.id ? 'Updating...' : 'Creating...';
+
+        $btn.prop('disabled', true).text(btnText);
+
+        $.ajax({
+            url: url,
+            method: method,
+            data: data,
+            success: function() {
+                $('#departmentModal').modal('hide');
+                loadDepartments();
+                showSuccess(data.id ? 'Department updated successfully!' : 'Department created successfully!');
+            },
+            error: function(xhr) {
+                if (xhr.status === 422) {
+                    const errors = xhr.responseJSON.errors;
+                    let errorHtml = '<ul style="text-align:left; margin:0; padding-left:20px;">';
+                    for (let field in errors) {
+                        errorHtml += `<li>${errors[field][0]}</li>`;
+                    }
+                    errorHtml += '</ul>';
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Validation Error',
+                        html: errorHtml,
+                        confirmButtonColor: '#0A3A6B'
+                    });
+                } else {
+                    showError('Failed to save department. Please try again.');
+                }
+            },
+            complete: function() {
+                $btn.prop('disabled', false).text('Save Department');
+            }
+        });
+    });
 
     // Search departments
     let searchTimeout;
@@ -81,36 +127,45 @@ $('#saveDepartmentBtn').on('click', function() {
         searchTimeout = setTimeout(() => loadDepartments(query), 300);
     });
 
-    // Load departments on page load
-
-
     // Load Departments Function
-    function loadDepartments(search='') {
+    function loadDepartments(search = '') {
         showLoading();
         $.ajax({
             url: '/api/departments',
             method: 'GET',
             data: { search: search },
-            success: function(response){
+            success: function(response) {
                 hideLoading();
-                renderDepartments(response.data || []);
+                if (response.success && response.data) {
+                    renderDepartments(response.data);
+                } else {
+                    renderDepartments([]);
+                }
             },
-            error: function() {
+            error: function(xhr) {
                 hideLoading();
-                showError('Failed to load departments.');
+                if (xhr.status === 404) {
+                    showError('Departments API endpoint not found. Check your routes.');
+                } else if (xhr.status === 500) {
+                    showError('Server error. Check Laravel logs.');
+                } else {
+                    showError('Failed to load departments.');
+                }
             }
         });
     }
 
     // Render Departments in Table
-    function renderDepartments(departments){
+    function renderDepartments(departments) {
         const $tbody = $('#departmentTableBody');
         $tbody.empty();
 
-        if(departments.length === 0){
+        if (departments.length === 0) {
             $tbody.html(`
                 <tr class="empty-state">
-                    <td colspan="4"><div class="empty-message">No departments found</div></td>
+                    <td colspan="4">
+                        <div class="empty-message">No departments found</div>
+                    </td>
                 </tr>
             `);
             $('#showingDepartmentText').text('Showing 0 of 0 departments');
@@ -120,14 +175,20 @@ $('#saveDepartmentBtn').on('click', function() {
         departments.forEach(dept => {
             const row = `
                 <tr>
-                    <td>${dept.name}</td>
-                    <td>${dept.head || '-'}</td>
-                    <td>${dept.staff_count || 0}</td>
                     <td>
-                        <div class="btn-group">
-                            <button class="btn btn-sm btn-outline-primary edit-dept" data-id="${dept.id}"><i class="bi bi-pencil"></i></button>
-                            <button class="btn btn-sm btn-outline-danger delete-dept" data-id="${dept.id}"><i class="bi bi-trash"></i></button>
-                        </div>
+                        <div style="font-weight: 600; color: #1a1a1a;">${dept.name}</div>
+                    </td>
+                    <td>${dept.head || '—'}</td>
+                    <td>
+                        <span class="badge bg-primary">${dept.staff_count || 0}</span>
+                    </td>
+                    <td>
+                        <button class="action-btn edit-dept" data-id="${dept.id}" title="Edit">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="action-btn delete delete-dept" data-id="${dept.id}" title="Delete">
+                            <i class="bi bi-trash"></i>
+                        </button>
                     </td>
                 </tr>
             `;
@@ -141,30 +202,53 @@ $('#saveDepartmentBtn').on('click', function() {
 
     // Attach Edit/Delete handlers
     function attachActionHandlers() {
+        // Edit Department
         $('.edit-dept').on('click', function() {
             const id = $(this).data('id');
-            $.get(`/api/departments/${id}`, function(dept){
-                $('#departmentId').val(dept.id);
-                $('#departmentName').val(dept.name);
-                $('#departmentHead').val(dept.head);
-                $('#departmentModalTitle').text('Edit Department');
-                $('#departmentModal').modal('show');
+
+            $.ajax({
+                url: `/api/departments/${id}`,
+                method: 'GET',
+                success: function(response) {
+                    const dept = response.data || response;
+                    $('#departmentId').val(dept.id);
+                    $('#departmentName').val(dept.name);
+                    $('#departmentHead').val(dept.head || '');
+                    $('#departmentModalTitle').text('Edit Department');
+                    $('#departmentModal').modal('show');
+                },
+                error: function() {
+                    showError('Failed to load department details.');
+                }
             });
         });
 
-        // Replace delete confirmation
+        // Delete Department
         $('.delete-dept').on('click', function() {
             const id = $(this).data('id');
+
             Swal.fire({
                 title: 'Are you sure?',
-                text: "This will permanently delete the department.",
+                text: "This will permanently delete the department and unassign all staff members!",
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#dc3545',
                 cancelButtonColor: '#6c757d',
-                confirmButtonText: 'Yes, delete it!'
+                confirmButtonText: 'Yes, delete it!',
+                cancelButtonText: 'Cancel'
             }).then((result) => {
                 if (result.isConfirmed) {
+                    // Show loading
+                    Swal.fire({
+                        title: 'Deleting...',
+                        text: 'Please wait',
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
                     $.ajax({
                         url: `/api/departments/${id}`,
                         method: 'DELETE',
@@ -172,8 +256,12 @@ $('#saveDepartmentBtn').on('click', function() {
                             loadDepartments();
                             showSuccess('Department deleted successfully!');
                         },
-                        error: function() {
-                            showError('Failed to delete department.');
+                        error: function(xhr) {
+                            if (xhr.status === 403) {
+                                showError('Cannot delete department with assigned staff members.');
+                            } else {
+                                showError('Failed to delete department.');
+                            }
                         }
                     });
                 }
@@ -181,27 +269,33 @@ $('#saveDepartmentBtn').on('click', function() {
         });
     }
 
-    // Utility
-    function showLoading(){ $('#loadingOverlay').removeClass('d-none'); }
-    function hideLoading(){ $('#loadingOverlay').addClass('d-none'); }
+    // Utility functions
+    function showLoading() {
+        $('#loadingOverlay').removeClass('d-none');
+    }
 
-    // Utility functions using SweetAlert2
+    function hideLoading() {
+        $('#loadingOverlay').addClass('d-none');
+    }
+
     function showSuccess(message) {
         Swal.fire({
             icon: 'success',
-            title: 'Success',
+            title: 'Success!',
             text: message,
             timer: 2000,
-            showConfirmButton: false
+            showConfirmButton: false,
+            toast: true,
+            position: 'top-end'
         });
     }
 
     function showError(message) {
         Swal.fire({
             icon: 'error',
-            title: 'Error',
+            title: 'Oops...',
             text: message,
+            confirmButtonColor: '#0A3A6B'
         });
     }
-
 });
