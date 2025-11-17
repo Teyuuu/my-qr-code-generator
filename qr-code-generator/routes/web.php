@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\QRCodeController;
 use App\Http\Controllers\StaffController;
+use App\Http\Controllers\DepartmentsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -48,12 +49,12 @@ Route::middleware('auth')->group(function () {
         Route::put('/staff/{id}', [StaffController::class, 'update']);
         Route::delete('/staff/{id}', [StaffController::class, 'destroy']);
 
-        // Staff Management API
-        Route::get('/staff', [App\Http\Controllers\StaffController::class, 'getStaff']);
-        Route::post('/staff', [App\Http\Controllers\StaffController::class, 'store']);
-        Route::get('/staff/{id}', [App\Http\Controllers\StaffController::class, 'show']);
-        Route::put('/staff/{id}', [App\Http\Controllers\StaffController::class, 'update']);
-        Route::delete('/staff/{id}', [App\Http\Controllers\StaffController::class, 'destroy']);
+        // Departments API
+        Route::get('/departments', [DepartmentsController::class, 'index']);
+        Route::post('/departments', [DepartmentsController::class, 'store']);
+        Route::get('/departments/{id}', [DepartmentsController::class, 'show']);
+        Route::put('/departments/{id}', [DepartmentsController::class, 'update']);
+        Route::delete('/departments/{id}', [DepartmentsController::class, 'destroy']);
     });
 });
 
