@@ -2,158 +2,87 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\QRCode;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Validator;
+use App\Models\QrCode;
 
 class QRCodeController extends Controller
 {
-    /**
-     * Display a listing of QR codes
-     */
-    public function index(Request $request)
+    // MAIN DATATABLES SERVER-SIDE ENDPOINT
+    public function datatables(Request $request)
     {
-        $query = QRCode::with('creator');
+        $columns = [
+            'event_title',
+            'event_date',
+            'venue',
+            'department',
+            'created_by'
+        ];
 
-        // Search functionality
-        if ($request->has('search') && $request->search != '') {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('event_title', 'like', "%{$search}%")
-                  ->orWhere('venue', 'like', "%{$search}%")
-                  ->orWhere('department', 'like', "%{$search}%");
+        $totalData = QrCode::count();
+        $totalFiltered = $totalData;
+
+        $limit  = $request->input('length');
+        $start  = $request->input('start');
+        $order  = $columns[$request->input('order.0.column')];
+        $dir    = $request->input('order.0.dir');
+        $search = $request->input('search.value');
+
+        $query = QrCode::query();
+
+        // SEARCH
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('event_title', 'LIKE', "%{$search}%")
+                  ->orWhere('venue', 'LIKE', "%{$search}%")
+                  ->orWhere('department', 'LIKE', "%{$search}%")
+                  ->orWhere('created_by', 'LIKE', "%{$search}%");
             });
+
+            $totalFiltered = $query->count();
         }
 
-        $qrCodes = $query->orderBy('created_at', 'desc')->get();
+        // PAGINATION + ORDER
+        $qrCodes = $query
+            ->offset($start)
+            ->limit($limit)
+            ->orderBy($order, $dir)
+            ->get();
 
-        // Format the data
-        $data = $qrCodes->map(function($qr) {
-            return [
-                'id' => $qr->id,
+        // FORMAT DATA
+        $data = [];
+        foreach ($qrCodes as $qr) {
+            $data[] = [
                 'event_title' => $qr->event_title,
-                'description' => $qr->description,
-                'venue' => $qr->venue,
-                'event_date' => $qr->event_date,
-                'event_time' => $qr->event_time,
-                'department' => $qr->department,
-                'created_by' => $qr->creator->name ?? 'Unknown',
-                'created_at' => $qr->created_at->format('Y-m-d H:i:s'),
+                'event_date'  => $qr->event_date,
+                'venue'       => $qr->venue,
+                'department'  => $qr->department,
+                'created_by'  => $qr->created_by,
+                'action'      =>
+                    '<div class="btn-group">
+                        <button class="btn btn-sm btn-outline-primary view-qr" data-id="'.$qr->id.'"><i class="bi bi-eye"></i></button>
+                        <button class="btn btn-sm btn-outline-secondary edit-qr" data-id="'.$qr->id.'"><i class="bi bi-pencil"></i></button>
+                        <button class="btn btn-sm btn-outline-danger delete-qr" data-id="'.$qr->id.'"><i class="bi bi-trash"></i></button>
+                    </div>'
             ];
-        });
-
-        return response()->json([
-            'success' => true,
-            'data' => $data
-        ]);
-    }
-
-    /**
-     * Store a newly created QR code
-     */
-    public function store(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'event_title' => 'required|string|max:255',
-            'venue' => 'required|string|max:255',
-            'event_date' => 'required|date',
-            'event_time' => 'required',
-            'department' => 'required|string',
-            'description' => 'nullable|string',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors()
-            ], 422);
         }
 
-        $qrCode = QRCode::create([
-            'event_title' => $request->event_title,
-            'venue' => $request->venue,
-            'event_date' => $request->event_date,
-            'event_time' => $request->event_time,
-            'department' => $request->department,
-            'description' => $request->description,
-            'user_id' => Auth::id(),
-            'qr_code' => $this->generateQRCode(), // You can implement actual QR generation
-        ]);
-
         return response()->json([
-            'success' => true,
-            'message' => 'QR Code created successfully',
-            'data' => $qrCode
-        ], 201);
+            'draw'            => intval($request->input('draw')),
+            'recordsTotal'    => $totalData,
+            'recordsFiltered' => $totalFiltered,
+            'data'            => $data
+        ]);
     }
 
-    /**
-     * Display the specified QR code
-     */
+    // SHOW
     public function show($id)
     {
-        $qrCode = QRCode::with('creator')->findOrFail($id);
+        $qr = QrCode::find($id);
 
-        return response()->json([
-            'success' => true,
-            'data' => $qrCode
-        ]);
-    }
-
-    /**
-     * Update the specified QR code
-     */
-    public function update(Request $request, $id)
-    {
-        $qrCode = QRCode::findOrFail($id);
-
-        $validator = Validator::make($request->all(), [
-            'event_title' => 'required|string|max:255',
-            'venue' => 'required|string|max:255',
-            'event_date' => 'required|date',
-            'event_time' => 'required',
-            'department' => 'required|string',
-            'description' => 'nullable|string',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors()
-            ], 422);
+        if (!$qr) {
+            return response()->json(['message' => 'QR code not found'], 404);
         }
 
-        $qrCode->update($request->all());
-
-        return response()->json([
-            'success' => true,
-            'message' => 'QR Code updated successfully',
-            'data' => $qrCode
-        ]);
-    }
-
-    /**
-     * Remove the specified QR code
-     */
-    public function destroy($id)
-    {
-        $qrCode = QRCode::findOrFail($id);
-        $qrCode->delete();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'QR Code deleted successfully'
-        ]);
-    }
-
-    /**
-     * Generate a unique QR code string
-     */
-    private function generateQRCode()
-    {
-        // You can implement actual QR code generation here
-        // For now, just return a unique string
-        return 'QR-' . strtoupper(uniqid());
+        return response()->json($qr);
     }
 }

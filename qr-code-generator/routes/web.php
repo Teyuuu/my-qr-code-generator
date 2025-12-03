@@ -35,9 +35,13 @@ Route::middleware('auth')->group(function () {
     })->name('departments');
 
     // API routes for QR codes
-    Route::prefix('api')->group(function () {
+        Route::prefix('api')->group(function () {
         Route::get('/qr-codes', [QRCodeController::class, 'index']);
         Route::post('/qr-codes', [QRCodeController::class, 'store']);
+
+        // DataTables route
+        Route::get('/qr-codes/datatables', [QRCodeController::class, 'datatables']);
+
         Route::get('/qr-codes/{id}', [QRCodeController::class, 'show']);
         Route::put('/qr-codes/{id}', [QRCodeController::class, 'update']);
         Route::delete('/qr-codes/{id}', [QRCodeController::class, 'destroy']);
@@ -45,6 +49,7 @@ Route::middleware('auth')->group(function () {
         // Staff Management API Routes
         Route::get('/staff', [StaffController::class, 'getStaff']);
         Route::post('/staff', [StaffController::class, 'store']);
+        Route::get('/departments/datatables', [DepartmentsController::class, 'datatables']);
         Route::get('/staff/{id}', [StaffController::class, 'show']);
         Route::put('/staff/{id}', [StaffController::class, 'update']);
         Route::delete('/staff/{id}', [StaffController::class, 'destroy']);
@@ -55,6 +60,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/departments/{id}', [DepartmentsController::class, 'show']);
         Route::put('/departments/{id}', [DepartmentsController::class, 'update']);
         Route::delete('/departments/{id}', [DepartmentsController::class, 'destroy']);
+
     });
 });
 

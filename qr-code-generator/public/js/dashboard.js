@@ -16,49 +16,37 @@ $(document).ready(function () {
 
     // ---------- DataTable ----------
     const qrTable = $('#qrTable').DataTable({
-        processing: true,
-        serverSide: false, // client-side works fine for moderate rows
-        ajax: {
-            url: '/api/qr-codes',
-            type: 'GET',
-            dataSrc: function (json) { return json.data || []; }
+    processing: true,
+    serverSide: true,
+    ajax: {
+        url: "/api/qr-codes/datatables",
+        type: 'GET'
+    },
+    columns: [
+        {
+            data: 'event_title',
+            render: (data, type, row) => `
+                <div style="font-weight:600;">${data}</div>
+                <div style="font-size:13px;color:#666;">${row.description || 'No description'}</div>`
         },
-        columns: [
-            {
-                data: 'event_title',
-                render: (data, type, row) => `
-                    <div style="font-weight:600;">${data}</div>
-                    <div style="font-size:13px;color:#666;">${row.description || 'No description'}</div>`
-            },
-            {
-                data: 'event_date',
-                render: (data, type, row) => `
-                    ${formatDate(data)}<br>
-                    <span style="font-size:13px;color:#666;">${formatTime(row.event_time)}</span>`
-            },
-            { data: 'venue' },
-            {
-                data: 'department',
-                render: (data) => `<span class="badge bg-primary">${data}</span>`
-            },
-            { data: 'created_by' },
-            {
-                data: 'id',
-                orderable: false,
-                searchable: false,
-                render: (id) => `
-                    <div class="btn-group">
-                        <button class="btn btn-sm btn-outline-primary view-qr" data-id="${id}"><i class="bi bi-eye"></i></button>
-                        <button class="btn btn-sm btn-outline-secondary edit-qr" data-id="${id}"><i class="bi bi-pencil"></i></button>
-                        <button class="btn btn-sm btn-outline-danger delete-qr" data-id="${id}"><i class="bi bi-trash"></i></button>
-                    </div>`
-            }
-        ],
-        order: [[1, 'desc']],
-        pageLength: 10
-    });
-
-    const reloadTable = () => qrTable.ajax.reload(null, false);
+        {
+            data: 'event_date',
+            render: (data, type, row) => `
+                ${formatDate(data)}<br>
+                <span style="font-size:13px;color:#666;">${row.event_time}</span>`
+        },
+        { data: 'venue' },
+        {
+            data: 'department',
+            render: (data) => `<span class="badge bg-primary">${data}</span>`
+        },
+        { data: 'created_by' },
+        { data: 'action', orderable: false, searchable: false }
+    ],
+    order: [[1, 'desc']],
+    pageLength: 10
+});
+const reloadTable = () => qrTable.ajax.reload(null, false);
 
     // ---------- Search ----------
     $('#searchInput').on('keyup', function () {

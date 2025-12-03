@@ -9,35 +9,57 @@ use Illuminate\Support\Facades\Validator;
 class DepartmentsController extends Controller
 {
     /**
-     * Display all departments
+     * Server-side DataTables endpoint
      */
-    public function index(Request $request)
+    public function datatables(Request $request)
     {
+        $columns = ['name', 'head', 'staff_count'];
+
+        $totalData = Department::count();
+        $totalFiltered = $totalData;
+
+        $limit = $request->input('length');
+        $start = $request->input('start');
+        $orderColumn = $request->input('order.0.column');
+        $order = $columns[$orderColumn] ?? 'name';
+        $dir = $request->input('order.0.dir') ?? 'asc';
+        $search = $request->input('search.value');
+
         $query = Department::withCount('users');
 
-        // Search functionality
-        if ($request->has('search') && $request->search != '') {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('head', 'like', "%{$search}%");
+        // 🔍 Search
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'LIKE', "%{$search}%")
+                  ->orWhere('head', 'LIKE', "%{$search}%");
             });
+            $totalFiltered = $query->count();
         }
 
-        $departments = $query->orderBy('name')->get();
+        // 🗂 Pagination + Ordering
+        $departments = $query
+            ->offset($start)
+            ->limit($limit)
+            ->orderBy($order, $dir)
+            ->get();
 
-        // Format the data
-        $data = $departments->map(function($dept) {
+        // ⚙ Format for DataTables
+        $data = $departments->map(function ($dept) {
             return [
                 'id' => $dept->id,
                 'name' => $dept->name,
-                'head' => $dept->head,
+                'head' => $dept->head ?? '—',
                 'staff_count' => $dept->users_count,
+                'action' => '
+                    <button class="btn btn-sm btn-outline-secondary edit-dept" data-id="'.$dept->id.'"><i class="bi bi-pencil"></i></button>
+                    <button class="btn btn-sm btn-outline-danger delete-dept" data-id="'.$dept->id.'"><i class="bi bi-trash"></i></button>'
             ];
         });
 
         return response()->json([
-            'success' => true,
+            'draw' => intval($request->input('draw')),
+            'recordsTotal' => $totalData,
+            'recordsFiltered' => $totalFiltered,
             'data' => $data
         ]);
     }
@@ -72,7 +94,7 @@ class DepartmentsController extends Controller
     }
 
     /**
-     * Display the specified department
+     * Show a specific department
      */
     public function show($id)
     {
@@ -85,7 +107,7 @@ class DepartmentsController extends Controller
     }
 
     /**
-     * Update the specified department
+     * Update a department
      */
     public function update(Request $request, $id)
     {
@@ -116,13 +138,12 @@ class DepartmentsController extends Controller
     }
 
     /**
-     * Remove the specified department
+     * Delete a department
      */
     public function destroy($id)
     {
         $department = Department::findOrFail($id);
 
-        // Check if department has staff members
         if ($department->users()->count() > 0) {
             return response()->json([
                 'success' => false,
