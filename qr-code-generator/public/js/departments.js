@@ -1,164 +1,145 @@
-// departments.js - Server-side DataTables version
-$(document).ready(function() {
-    // ---------- Setup CSRF ----------
+// departments.js - FINAL PROFESSIONAL VERSION
+$(document).ready(function () {
     $.ajaxSetup({
         headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') }
     });
 
-    // ---------- Sidebar toggle ----------
-    $('#menuBtn').click(() => $('#sidebar').addClass('show'));
-    $('#closeSidebar').click(() => $('#sidebar').removeClass('show'));
-    $(document).click(function(e) {
+    // Sidebar toggle
+    $('#menuBtn, #closeSidebar').click(() => $('#sidebar').toggleClass('show'));
+    $(document).click(e => {
         if (window.innerWidth <= 991 && !$(e.target).closest('.sidebar, #menuBtn').length) {
             $('#sidebar').removeClass('show');
         }
     });
 
-    // ---------- Logout ----------
-    $('#logoutBtn').click(function(e) {
-        e.preventDefault();
-        Swal.fire({
-            title: 'Logout',
-            text: 'Are you sure you want to logout?',
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonColor: '#0A3A6B',
-            cancelButtonColor: '#6c757d',
-            confirmButtonText: 'Yes, logout',
-            cancelButtonText: 'Cancel'
-        }).then(result => {
-            if (result.isConfirmed) {
-                $.post('/logout', () => window.location.href = '/login')
-                    .fail(() => showError('Logout failed. Please try again.'));
-            }
-        });
-    });
-
-    // ---------- Initialize DataTable ----------
-    const departmentTable = $('#departmentTable').DataTable({
+    // DataTable
+    const table = $('#departmentTable').DataTable({
         processing: true,
         serverSide: true,
-        ajax: {
-            url: '/api/departments/datatables',
-            type: 'GET'
-        },
+        responsive: true,
+        ajax: '/api/departments/datatables',
         columns: [
-            { data: 'name' },
-            { data: 'head' },
-            { data: 'staff_count' },
-            { data: 'action', orderable: false, searchable: false }
+            {
+                data: 'name',
+                render: data => `<strong>${data}</strong>`
+            },
+            {
+                data: 'head',
+                render: data => data ? `<span class="text-primary">${data}</span>` : '<span class="text-muted">—</span>'
+            },
+            {
+                data: 'staff_count',
+                render: data => `<span class="badge bg-success fs-6">${data}</span>`
+            },
+            {
+                data: 'action',
+                orderable: false,
+                searchable: false,
+                className: 'text-center',
+                render: data => data
+            }
         ],
         order: [[0, 'asc']],
-        pageLength: 10
+        pageLength: 10,
+        language: {
+            processing: '<div class="spinner-border text-primary"></div>',
+            emptyTable: '<div class="text-center py-5"><i class="bi bi-building fs-1 text-muted"></i><p class="mt-3 text-muted">No departments yet</p></div>',
+            zeroRecords: '<div class="text-center py-4 text-muted">No matching departments found</div>',
+            info: "Showing _START_ to _END_ of _TOTAL_ departments",
+            lengthMenu: "Show _MENU_ entries"
+        },
+        dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rt<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>'
     });
 
-    // ---------- Search ----------
-    $('#searchDepartmentInput').on('keyup', function() {
-        departmentTable.search(this.value).draw();
+    // Search
+    $('#searchDepartmentInput').on('keyup', function () {
+        table.search(this.value).draw();
     });
 
-    // ---------- Open Create Department modal ----------
-    $('#createDepartmentBtn').click(function() {
+    // Create New
+    $('#createDepartmentBtn').click(function () {
         $('#departmentForm')[0].reset();
         $('#departmentId').val('');
-        $('#departmentModalTitle').text('Create Department');
+        $('#departmentModalTitle').text('Create New Department');
         $('#departmentModal').modal('show');
     });
 
-    // ---------- Save Department (Create/Update) ----------
-    $('#saveDepartmentBtn').click(function() {
+    // Save
+    $('#saveDepartmentBtn').click(function () {
         const id = $('#departmentId').val();
         const data = {
-            name: $('#departmentName').val(),
-            head: $('#departmentHead').val()
+            name: $('#departmentName').val().trim(),
+            head: $('#departmentHead').val().trim() || null
         };
 
-        if (!data.name || !data.name.trim()) {
-            showError('Please enter a department name');
+        if (!data.name) {
+            Swal.fire('Error', 'Department name is required', 'error');
             return;
         }
 
         const url = id ? `/api/departments/${id}` : '/api/departments';
         const method = id ? 'PUT' : 'POST';
-        const $btn = $(this);
-        $btn.prop('disabled', true).text(id ? 'Updating...' : 'Creating...');
+
+        $(this).prop('disabled', true).text('Saving...');
 
         $.ajax({
-            url: url,
-            method: method,
-            data: data,
-            success: function(res) {
+            url, method, data,
+            success: function () {
                 $('#departmentModal').modal('hide');
-                departmentTable.ajax.reload(null, false); // reload table
+                table.ajax.reload(null, false);
                 Swal.fire({
                     icon: 'success',
-                    title: id ? 'Department updated!' : 'Department created!',
+                    title: id ? 'Updated!' : 'Created!',
+                    text: 'Department saved successfully',
                     timer: 1500,
-                    showConfirmButton: false,
-                    toast: true,
-                    position: 'top-end'
+                    showConfirmButton: false
                 });
             },
-            error: function(xhr) {
-                if (xhr.status === 422) {
-                    const errors = xhr.responseJSON.errors;
-                    let html = '<ul style="text-align:left;">';
-                    for (let field in errors) html += `<li>${errors[field][0]}</li>`;
-                    html += '</ul>';
-                    Swal.fire({ icon: 'error', title: 'Validation Error', html: html });
-                } else {
-                    showError('Failed to save department.');
-                }
+            error: function (xhr) {
+                const msg = xhr.responseJSON?.errors
+                    ? Object.values(xhr.responseJSON.errors).flat().join('<br>')
+                    : xhr.responseJSON?.message || 'Something went wrong';
+                Swal.fire('Error', msg, 'error');
             },
-            complete: function() {
-                $btn.prop('disabled', false).text('Save Department');
-            }
+            complete: () => $(this).prop('disabled', false).text('Save Department')
         });
     });
 
-    // ---------- Edit Department ----------
-    $('#departmentTable tbody').on('click', '.edit-dept', function() {
+    // Edit
+    $('#departmentTable tbody').on('click', '.edit-dept', function () {
         const id = $(this).data('id');
-        $.get(`/api/departments/${id}`, function(res) {
-            const dept = res.data;
-            $('#departmentId').val(dept.id);
-            $('#departmentName').val(dept.name);
-            $('#departmentHead').val(dept.head || '');
+        $.get(`/api/departments/${id}`).done(res => {
+            const d = res.data;
+            $('#departmentId').val(d.id);
+            $('#departmentName').val(d.name);
+            $('#departmentHead').val(d.head || '');
             $('#departmentModalTitle').text('Edit Department');
             $('#departmentModal').modal('show');
-        }).fail(() => showError('Failed to load department details.'));
+        });
     });
 
-    // ---------- Delete Department ----------
-    $('#departmentTable tbody').on('click', '.delete-dept', function() {
+    // Delete
+    $('#departmentTable tbody').on('click', '.delete-dept', function () {
         const id = $(this).data('id');
         Swal.fire({
-            title: 'Are you sure?',
-            text: 'This will permanently delete the department!',
+            title: 'Delete Department?',
+            text: "This cannot be undone!",
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#dc3545',
-            cancelButtonColor: '#6c757d',
             confirmButtonText: 'Yes, delete it!'
         }).then(result => {
             if (result.isConfirmed) {
                 $.ajax({
                     url: `/api/departments/${id}`,
                     method: 'DELETE',
-                    success: function(res) {
-                        departmentTable.ajax.reload(null, false);
-                        Swal.fire({ icon: 'success', title: res.message || 'Deleted!', timer: 1500, showConfirmButton: false, toast: true, position: 'top-end' });
+                    success: () => {
+                        table.ajax.reload(null, false);
+                        Swal.fire('Deleted!', 'Department removed', 'success');
                     },
-                    error: function(xhr) {
-                        showError(xhr.responseJSON?.message || 'Failed to delete department.');
-                    }
+                    error: (xhr) => Swal.fire('Error', xhr.responseJSON?.message || 'Cannot delete', 'error')
                 });
             }
         });
     });
-
-    // ---------- Utility functions ----------
-    function showError(msg) {
-        Swal.fire({ icon: 'error', title: 'Oops...', text: msg, confirmButtonColor: '#0A3A6B' });
-    }
 });

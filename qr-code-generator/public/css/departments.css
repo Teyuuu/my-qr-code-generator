@@ -90,6 +90,39 @@
     font-size: 14px;
 }
 
+.department-table th {
+    background: #0A3A6B !important;
+    color: white !important;
+    font-weight: 600;
+}
+
+@media (max-width: 768px) {
+    #departmentTable thead { display: none; }
+    #departmentTable tbody td {
+        display: block;
+        text-align: right;
+        padding-left: 50%;
+        position: relative;
+        border-bottom: 1px solid #eee;
+    }
+    #departmentTable tbody td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 15px;
+        width: 45%;
+        font-weight: bold;
+        text-align: left;
+        color: #0A3A6B;
+    }
+    #departmentTable tbody tr {
+        margin: 15px 0;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        padding: 15px;
+    }
+}
+
 /* Modal Customization */
 #departmentModal .modal-header {
     background-color: #f8f9fa;

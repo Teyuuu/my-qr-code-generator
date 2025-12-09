@@ -101,21 +101,17 @@
             </div>
 
             <div class="table-responsive">
-                <table class="table department-table">
-                    <thead>
+                <table id="departmentTable" class="table table-striped table-hover department-table">
+                    <thead class="table-primary">
                         <tr>
                             <th>Department Name</th>
                             <th>Head of Department</th>
-                            <th>Number of Staff</th>
-                            <th>Actions</th>
+                            <th>Staff Count</th>
+                            <th class="text-center">Actions</th>
                         </tr>
                     </thead>
-                    <tbody id="departmentTableBody">
-                        <tr class="empty-state">
-                            <td colspan="4">
-                                <div class="empty-message">Loading departments...</div>
-                            </td>
-                        </tr>
+                    <tbody>
+                        <!-- DataTables will fill this -->
                     </tbody>
                 </table>
             </div>
