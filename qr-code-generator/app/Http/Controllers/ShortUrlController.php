@@ -66,29 +66,48 @@ class ShortUrlController extends Controller
             $type    = $url->destination_url ? 'External Link' : 'Internal Form';
 
             $data[] = [
-                // These EXACT keys must match your DataTables columns
                 'event_title' => "
-                    <div>
-                        <strong>" . htmlspecialchars($url->event_title ?? 'Untitled Event') . "</strong>
-                        <br><small class='text-muted'>" . htmlspecialchars($type) . "</small>
+                    <div data-label='Event'>
+                        <div class='fw-bold'>" . htmlspecialchars($url->event_title) . "</div>
+                        <small class='text-muted'>" . htmlspecialchars($url->venue ?? 'No venue') . "</small>
+                        <div><small class='text-success fw-bold'>{$url->registrations_count} registration(s)</small></div>
                     </div>",
-                'event_date'  => $url->event_date
-                    ? date('M d, Y', strtotime($url->event_date)) . "<br><small>{$url->event_time}</small>"
-                    : '—',
-                'venue'       => $url->venue,
-                'department'  => "<span class='badge bg-primary'>" . htmlspecialchars($url->department ?? 'All') . "</span>",
-                'created_by'  => 'Admin', // You can later replace with real user
-                'action'      => "
-                    <div class='btn-group' role='group'>
-                        <button class='btn btn-sm btn-outline-primary copy-link' data-link='{$fullUrl}' title='Copy Link'>
-                            <i class='bi bi-link-45deg'></i>
-                        </button>
-                        <button class='btn btn-sm btn-outline-success download-qr' data-code='{$url->short_code}' title='Download QR'>
-                            <i class='bi bi-download'></i>
-                        </button>
-                        <button class='btn btn-sm btn-outline-danger delete-qr' data-id='{$url->id}' title='Delete'>
-                            <i class='bi bi-trash'></i>
-                        </button>
+                'event_date' => "
+                    <div data-label='Date & Time'>
+                        " . ($url->event_date
+                            ? \Carbon\Carbon::parse($url->event_date)->format('M d, Y') . "<br><small>{$url->event_time}</small>"
+                            : '—') . "
+                    </div>",
+                'venue' => "
+                    <div data-label='Type'>
+                        <span class='badge bg-" . ($url->destination_url ? "warning" : "success") . "'>
+                            " . ($url->destination_url ? 'External Link' : 'Internal Form') . "
+                        </span>
+                    </div>",
+                'department' => "
+                    <div data-label='Department'>
+                        <span class='badge bg-primary'>" . htmlspecialchars($url->department ?? 'All') . "</span>
+                    </div>",
+                'created_by' => "
+                    <div data-label='Created By'>
+                        " . htmlspecialchars($url->creator?->name ?? 'Admin') . "
+                    </div>",
+                'action' => "
+                    <div data-label='Actions' class='text-center'>
+                        <div class='btn-group' role='group'>
+                            <button class='btn btn-sm btn-outline-primary copy-link' data-link='{$fullUrl}'>
+                                <i class='bi bi-link-45deg'></i>
+                            </button>
+                            <button class='btn btn-sm btn-outline-info preview-qr' data-id='{$url->id}' data-title='" . htmlspecialchars($url->event_title) . "' data-venue='" . htmlspecialchars($url->venue ?? '') . "'>
+                                <i class='bi bi-qr-code-scan'></i>
+                            </button>
+                            <button class='btn btn-sm btn-outline-success download-qr' data-id='{$url->id}'>
+                                <i class='bi bi-download'></i>
+                            </button>
+                            <button class='btn btn-sm btn-outline-danger delete-qr' data-id='{$url->id}'>
+                                <i class='bi bi-trash'></i>
+                            </button>
+                        </div>
                     </div>"
             ];
         }

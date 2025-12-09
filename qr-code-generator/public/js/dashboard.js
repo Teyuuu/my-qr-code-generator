@@ -14,42 +14,78 @@ $(document).ready(function () {
         }
     });
 
-    // ---------- DataTable ----------
-    const qrTable = $('#qrTable').DataTable({
-        processing: true,
-        serverSide: true,
-        ajax: {
-            url: "/api/qr-codes/datatables",
-            type: 'GET'
-        },
-        columns: [
-            {
-                data: 'event_title',
-                render: function(data, type, row) {
-                    return data; // Already rich HTML from controller
-                }
-            },
-            { data: 'event_date' },
-            { data: 'venue' },
-            { data: 'department' },
-            { data: 'created_by' },
-            {
-                data: 'action',
-                orderable: false,
-                searchable: false,
-                render: function(data) {
-                    return data; // Already HTML buttons
-                }
-            }
-        ],
-        order: [[1, 'desc']], // Sort by date
-        pageLength: 10,
-        language: {
-            processing: "Loading QR Codes..."
+    // ---------- ULTRA RESPONSIVE DATATABLE ----------
+const qrTable = $('#qrTable').DataTable({
+    processing: true,
+    serverSide: true,
+    ajax: {
+        url: "/api/qr-codes/datatables",
+        type: 'GET'
+    },
+    responsive: true,  // THIS MAKES IT MOBILE PERFECT
+    autoWidth: false,
+    pageLength: 10,
+    lengthMenu: [10, 25, 50, 100],
+    order: [[1, 'desc']], // Sort by date
+    language: {
+        processing: "Loading QR Codes...",
+        emptyTable: "No QR codes created yet",
+        zeroRecords: "No matching QR codes found",
+        info: "Showing _START_ to _END_ of _TOTAL_ QR codes",
+        infoEmpty: "",
+        lengthMenu: "Show _MENU_ entries",
+        paginate: {
+            first: "First",
+            last: "Last",
+            next: '<i class="bi bi-chevron-right"></i>',
+            previous: '<i class="bi bi-chevron-left"></i>'
         }
-    });
+    },
+    columns: [
+        {
+            data: 'event_title',
+            title: 'Event',
+            render: (data) => data // Already rich HTML
+        },
+        {
+            data: 'event_date',
+            title: 'Date & Time',
+            render: (data) => data || '—'
+        },
+        {
+            data: 'venue',
+            title: 'Type',
+            render: (data) => data
+        },
+        {
+            data: 'department',
+            title: 'Department',
+            render: (data) => data
+        },
+        {
+            data: 'created_by',
+            title: 'Created By'
+        },
+        {
+            data: 'action',
+            title: 'Actions',
+            orderable: false,
+            searchable: false,
+            className: 'text-center',
+            render: (data) => data
+        }
+    ],
+    dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rt<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+    drawCallback: function () {
+        // Re-init tooltips if you use any
+        $('[data-bs-toggle="tooltip"]').tooltip();
+    }
+});
 
-    const reloadTable = () => qrTable.ajax.reload(null, false);
+// Make it even more mobile-friendly
+$(window).on('resize', function () {
+    qrTable.responsive.recalc();
+});
 
     // ---------- Search ----------
     $('#searchInput').on('keyup', function () {
@@ -182,6 +218,57 @@ $(document).ready(function () {
             }
         });
     });
+
+    // QR CODE PREVIEW MODAL
+$('#qrTable tbody').on('click', '.preview-qr', function () {
+    const id = $(this).data('id');
+    const title = $(this).data('title');
+    const venue = $(this).data('venue');
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(window.location.origin + '/s/' + $(this).closest('tr').find('td').first().text().trim())}`;
+
+    // Create modal HTML
+    const modalHtml = `
+        <div class="modal fade" id="qrPreviewModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title">
+                            <i class="bi bi-qr-code-scan me-2"></i>QR Code Preview
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body text-center py-5">
+                        <div class="mb-4">
+                            <h4 class="fw-bold text-primary">${title || 'Event'}</h4>
+                            ${venue ? `<p class="text-muted mb-0">${venue}</p>` : ''}
+                        </div>
+                        <img src="${qrUrl}" alt="QR Code" class="img-fluid rounded shadow" style="max-width: 300px;">
+                        <div class="mt-4">
+                            <p class="text-success fw-bold">
+                                <i class="bi bi-phone-vibrate"></i> Scan with your phone to test!
+                            </p>
+                        </div>
+                    </div>
+                    <div class="modal-footer justify-content-center bg-light">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+
+    // Remove old modal if exists
+    $('#qrPreviewModal').remove();
+    $('body').append(modalHtml);
+
+    // Show modal
+    const modal = new bootstrap.Modal('#qrPreviewModal');
+    modal.show();
+
+    // Auto-remove after close
+    $('#qrPreviewModal').on('hidden.bs.modal', function () {
+        $(this).remove();
+    });
+});
 
     // ---------- Logout ----------
     $('#logoutBtn').click(e => {

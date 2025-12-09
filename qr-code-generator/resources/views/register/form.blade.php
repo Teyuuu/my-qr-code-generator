@@ -8,59 +8,162 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
     <style>
-        body { background: linear-gradient(135deg, #0A3A6B, #1e5a8c); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
-        .card { max-width: 520px; width: 100%; border-radius: 16px; box-shadow: 0 15px 35px rgba(0,0,0,0.4); }
-        .btn-submit { background: #FDB813; border: none; font-weight: bold; color: #000; }
-        .btn-submit:hover { background: #e1a00d; }
-        .header-logo { width: 90px; height: 90px; object-fit: contain; }
+        body {
+            background: linear-gradient(135deg, #0A3A6B, #1e5a8c);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+        }
+        .card {
+            max-width: 580px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border: none;
+        }
+        .card-header {
+            background: linear-gradient(135deg, #0A3A6B, #1e5a8c);
+            color: white;
+            padding: 2rem 1.5rem;
+            border-radius: 16px 16px 0 0;
+        }
+        .header-logo {
+            width: 90px;
+            height: 90px;
+            object-fit: contain;
+            margin-bottom: 1rem;
+        }
+        .card-header h4 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        .event-title {
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: #FDB813;
+            margin-bottom: 0.25rem;
+        }
+        .card-body {
+            padding: 2rem 1.5rem;
+        }
+        .form-label {
+            font-weight: 600;
+            color: #0A3A6B;
+            margin-bottom: 0.4rem;
+            font-size: 0.9rem;
+        }
+        .required {
+            color: #dc3545;
+        }
+        .form-control {
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 0.65rem 0.9rem;
+            transition: border-color 0.2s;
+        }
+        .form-control:focus {
+            border-color: #FDB813;
+            box-shadow: 0 0 0 0.15rem rgba(253, 184, 19, 0.15);
+        }
+        .section-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #0A3A6B;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #FDB813;
+        }
+        .btn-submit {
+            background: #FDB813;
+            border: none;
+            font-weight: 700;
+            color: #000;
+            padding: 0.9rem;
+            font-size: 1rem;
+            border-radius: 8px;
+            text-transform: uppercase;
+            transition: background 0.2s;
+        }
+        .btn-submit:hover {
+            background: #e1a00d;
+        }
+        .btn-submit:disabled {
+            opacity: 0.7;
+        }
+        .char-count {
+            font-size: 0.8rem;
+            color: #6c757d;
+            text-align: right;
+            margin-top: 0.25rem;
+        }
+        @media (max-width: 768px) {
+            .card-body { padding: 1.5rem 1rem; }
+            .card-header { padding: 1.5rem 1rem; }
+        }
     </style>
 </head>
 <body>
-<div class="container py-4">
+<div class="container">
     <div class="card">
-        <div class="card-header text-center bg-primary text-white py-4">
-            @if(file_exists(public_path('images/logo.png')))
-                <img src="{{ asset('images/logo.png') }}" alt="Logo" class="header-logo mb-3">
+        <div class="card-header text-center">
+            @if(file_exists(public_path('images/bacoor-logo.png')))
+                <img src="{{ asset('images/bacoor-logo.png') }}" alt="Logo" class="header-logo">
             @endif
-            <h4 class="mb-1">Visitor Registration</h4>
-            <p class="mb-0 fs-5 fw-bold">{{ $url->event_title }}</p>
+            <h4>Visitor Registration</h4>
+            <p class="event-title mb-1">{{ $url->event_title }}</p>
             @if($url->venue)
-                <small>{{ $url->venue }}</small>
+                <small class="text-white-50">📍 {{ $url->venue }}</small>
             @endif
         </div>
-        <div class="card-body p-4">
+        <div class="card-body">
             <form id="registrationForm">
                 @csrf
-                <div class="row g-3">
-                    <div class="col-md-4">
-                        <input type="text" class="form-control" name="firstname" placeholder="First Name *" required>
-                    </div>
-                    <div class="col-md-4">
-                        <input type="text" class="form-control" name="middlename" placeholder="Middle Name">
-                    </div>
-                    <div class="col-md-4">
-                        <input type="text" class="form-control" name="lastname" placeholder="Last Name *" required>
+
+                <div class="mb-4">
+                    <div class="section-title">Personal Information</div>
+                    <div class="row g-2">
+                        <div class="col-md-4">
+                            <label class="form-label">First Name <span class="required">*</span></label>
+                            <input type="text" class="form-control" name="firstname" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Middle Name</label>
+                            <input type="text" class="form-control" name="middlename">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Last Name <span class="required">*</span></label>
+                            <input type="text" class="form-control" name="lastname" required>
+                        </div>
                     </div>
                 </div>
 
-                <div class="mt-3">
-                    <input type="text" class="form-control" name="lgu_company" placeholder="LGU / Company *" required>
-                </div>
-                <div class="mt-3">
-                    <input type="text" class="form-control" name="position" placeholder="Position *" required>
-                </div>
-                <div class="mt-3">
-                    <input type="text" class="form-control" name="contact" placeholder="Contact Number *" required>
-                </div>
-                <div class="mt-3">
-                    <textarea class="form-control" name="purpose" rows="4" placeholder="Purpose / Remarks *" required></textarea>
+                <div class="mb-4">
+                    <div class="section-title">Professional Details</div>
+                    <div class="mb-3">
+                        <label class="form-label">LGU / Company <span class="required">*</span></label>
+                        <input type="text" class="form-control" name="lgu_company" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Position <span class="required">*</span></label>
+                        <input type="text" class="form-control" name="position" required>
+                    </div>
+                    <div>
+                        <label class="form-label">Contact Number <span class="required">*</span></label>
+                        <input type="tel" class="form-control" name="contact" placeholder="09XX XXX XXXX" required>
+                    </div>
                 </div>
 
-                <div class="mt-4">
-                    <button type="submit" class="btn btn-submit w-100 py-3 text-uppercase fw-bold">
-                        Submit Registration
-                    </button>
+                <div class="mb-4">
+                    <div class="section-title">Purpose of Visit</div>
+                    <textarea class="form-control" name="purpose" rows="4" maxlength="500" id="purposeField" required></textarea>
+                    <div class="char-count"><span id="charCount">0</span> / 500</div>
                 </div>
+
+                <button type="submit" class="btn btn-submit w-100" id="submitBtn">
+                    Submit Registration
+                </button>
             </form>
         </div>
     </div>
@@ -70,39 +173,42 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 $(function() {
+    $('#purposeField').on('input', function() {
+        $('#charCount').text($(this).val().length);
+    });
+
     $('#registrationForm').on('submit', function(e) {
         e.preventDefault();
-        const btn = $('button[type="submit"]');
-        btn.prop('disabled', true).html('Submitting...');
+        const btn = $('#submitBtn');
+        btn.prop('disabled', true).text('Submitting...');
 
         $.ajax({
             url: "{{ route('short.register', $url->short_code) }}",
             method: 'POST',
             data: $(this).serialize(),
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            },
+            headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
             success: function(res) {
                 Swal.fire({
                     icon: 'success',
-                    title: 'Thank You!',
+                    title: 'Success!',
                     text: res.message,
                     timer: 3000,
                     showConfirmButton: false
                 });
                 $('#registrationForm')[0].reset();
+                $('#charCount').text('0');
             },
             error: function(xhr) {
                 let msg = 'Something went wrong.';
                 if (xhr.responseJSON?.errors) {
-                    msg = Object.values(xhr.responseJSON.errors).flat().join('<br>');
+                    msg = Object.values(xhr.responseJSON.errors).flat().join('\n');
                 } else if (xhr.responseJSON?.message) {
                     msg = xhr.responseJSON.message;
                 }
-                Swal.fire({ icon: 'error', title: 'Error', html: msg });
+                Swal.fire({icon: 'error', title: 'Error', text: msg});
             },
             complete: function() {
-                btn.prop('disabled', false).html('Submit Registration');
+                btn.prop('disabled', false).text('Submit Registration');
             }
         });
     });
