@@ -1,3 +1,3 @@
 <?php
 
-Route::get('/qr-codes/datatables', [QrCodeController::class, 'datatable']);
+Route::get('/qr-codes/datatables', [ShortUrlController::class, 'datatable']);

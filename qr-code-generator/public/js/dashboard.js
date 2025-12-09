@@ -16,37 +16,40 @@ $(document).ready(function () {
 
     // ---------- DataTable ----------
     const qrTable = $('#qrTable').DataTable({
-    processing: true,
-    serverSide: true,
-    ajax: {
-        url: "/api/qr-codes/datatables",
-        type: 'GET'
-    },
-    columns: [
-        {
-            data: 'event_title',
-            render: (data, type, row) => `
-                <div style="font-weight:600;">${data}</div>
-                <div style="font-size:13px;color:#666;">${row.description || 'No description'}</div>`
+        processing: true,
+        serverSide: true,
+        ajax: {
+            url: "/api/qr-codes/datatables",
+            type: 'GET'
         },
-        {
-            data: 'event_date',
-            render: (data, type, row) => `
-                ${formatDate(data)}<br>
-                <span style="font-size:13px;color:#666;">${row.event_time}</span>`
-        },
-        { data: 'venue' },
-        {
-            data: 'department',
-            render: (data) => `<span class="badge bg-primary">${data}</span>`
-        },
-        { data: 'created_by' },
-        { data: 'action', orderable: false, searchable: false }
-    ],
-    order: [[1, 'desc']],
-    pageLength: 10
-});
-const reloadTable = () => qrTable.ajax.reload(null, false);
+        columns: [
+            {
+                data: 'event_title',
+                render: function(data, type, row) {
+                    return data; // Already rich HTML from controller
+                }
+            },
+            { data: 'event_date' },
+            { data: 'venue' },
+            { data: 'department' },
+            { data: 'created_by' },
+            {
+                data: 'action',
+                orderable: false,
+                searchable: false,
+                render: function(data) {
+                    return data; // Already HTML buttons
+                }
+            }
+        ],
+        order: [[1, 'desc']], // Sort by date
+        pageLength: 10,
+        language: {
+            processing: "Loading QR Codes..."
+        }
+    });
+
+    const reloadTable = () => qrTable.ajax.reload(null, false);
 
     // ---------- Search ----------
     $('#searchInput').on('keyup', function () {
@@ -66,7 +69,9 @@ const reloadTable = () => qrTable.ajax.reload(null, false);
             event_date: $('#eventDate').val(),
             event_time: $('#eventTime').val(),
             department: $('#department').val(),
-            description: $('#description').val()
+            description: $('#description').val(),
+            link_type: $('input[name="link_type"]:checked').val(),
+            external_link: $('#externalLink').val().trim()
         };
 
         $.post('/api/qr-codes', formData)
@@ -92,6 +97,21 @@ const reloadTable = () => qrTable.ajax.reload(null, false);
                 }
             })
             .always(() => $btn.prop('disabled', false).text('Create QR Code'));
+    });
+    // Toggle between external and internal link options
+    $('input[name="link_type"]').on('change', function () {
+        if ($(this).val() === 'internal') {
+            $('#externalLinkGroup').addClass('d-none');
+            $('#externalLink').prop('required', false);
+            $('#internalLinkPreview').removeClass('d-none');
+            // Simulate a short code preview
+            const randomCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+            $('#generatedLinkPreview').text(`${window.location.origin}/s/${randomCode}`);
+        } else {
+            $('#externalLinkGroup').removeClass('d-none');
+            $('#externalLink').prop('required', true);
+            $('#internalLinkPreview').addClass('d-none');
+        }
     });
 
     // ---------- Dynamic action buttons ----------
@@ -129,6 +149,39 @@ const reloadTable = () => qrTable.ajax.reload(null, false);
             error: () => Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to delete QR code.' })
         });
     }
+
+    // ---------- New Action Buttons ----------
+    $('#qrTable tbody').on('click', '.copy-link', function () {
+        const link = $(this).data('link');
+        navigator.clipboard.writeText(link).then(() => {
+            Swal.fire({ icon: 'success', title: 'Copied!', text: 'Link copied to clipboard', timer: 1500, showConfirmButton: false });
+        });
+    });
+
+    $('#qrTable tbody').on('click', '.download-qr', function () {
+        const code = $(this).data('code');
+        const url = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(window.location.origin + '/s/' + code)}`;
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `QR_${code}.png`;
+        a.click();
+    });
+
+    $('#qrTable tbody').on('click', '.delete-qr', function () {
+        const id = $(this).data('id');
+        Swal.fire({
+            title: 'Delete QR Code?',
+            text: "This cannot be undone!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            confirmButtonText: 'Yes, delete it!'
+        }).then(result => {
+            if (result.isConfirmed) {
+                deleteQRCode(id);
+            }
+        });
+    });
 
     // ---------- Logout ----------
     $('#logoutBtn').click(e => {

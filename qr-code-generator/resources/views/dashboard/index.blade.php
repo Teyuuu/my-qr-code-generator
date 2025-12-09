@@ -167,6 +167,35 @@
                                     <option value="Operations">Operations</option>
                                 </select>
                             </div>
+
+                            <!-- New Section: Registration Link Options -->
+                            <div class="col-12 mb-4">
+                                <label class="form-label fw-bold text-primary">Registration Form Link</label>
+                                <div class="border rounded p-3 bg-light">
+                                    <div class="form-check mb-3">
+                                        <input class="form-check-input" type="radio" name="link_type" id="useExternalLink" value="external" checked>
+                                        <label class="form-check-label" for="useExternalLink">
+                                            Use External Link (Google Forms, Microsoft Forms, etc.)
+                                        </label>
+                                    </div>
+                                    <div id="externalLinkGroup">
+                                        <input type="url" class="form-control" id="externalLink" name="external_link" placeholder="https://forms.gle/abc123 or https://forms.office.com/...">
+                                    </div>
+
+                                    <div class="form-check mt-3">
+                                        <input class="form-check-input" type="radio" name="link_type" id="useInternalLink" value="internal">
+                                        <label class="form-check-label" for="useInternalLink">
+                                            Generate System Link (Built-in Registration Form)
+                                        </label>
+                                    </div>
+                                    <div id="internalLinkPreview" class="mt-2 p-3 bg-white border rounded d-none">
+                                        <small class="text-muted d-block mb-2">Your unique registration link will be:</small>
+                                        <code class="text-primary" id="generatedLinkPreview">https://yourdomain.com/s/xxxxxx</code>
+                                        <small class="text-success d-block mt-2">This link will be generated automatically after saving.</small>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="col-12 mb-3">
                                 <label for="description" class="form-label">Description</label>
                                 <textarea class="form-control" id="description" name="description" rows="3"></textarea>

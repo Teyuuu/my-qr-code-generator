@@ -14,17 +14,6 @@ $(document).ready(function() {
         }
     });
 
-    // ---------- Profile ----------
-    $('#profileBtn').click(function(e) {
-        e.preventDefault();
-        Swal.fire({
-            icon: 'info',
-            title: 'Profile',
-            text: 'Profile page coming soon!',
-            confirmButtonColor: '#0A3A6B'
-        });
-    });
-
     // ---------- Logout ----------
     $('#logoutBtn').click(function(e) {
         e.preventDefault();
